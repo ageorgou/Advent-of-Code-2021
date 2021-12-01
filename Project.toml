@@ -1,0 +1,7 @@
+name = "AoC2021"
+uuid = "66a76b35-5cc0-4394-b950-5c145ae5566c"
+authors = ["Anastasis Georgoulas <a.georgoulas@ucl.ac.uk>"]
+version = "0.1.0"
+
+[deps]
+ReTest = "e0db7c4e-2690-44b9-bad6-7687da720f89"
