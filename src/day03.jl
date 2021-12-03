@@ -2,22 +2,21 @@ module day03
 
 using ..ReTest
 
-function getUpdate(line::String, nDigits::Int)
-    update = digits(parse(Int, line, base=2), base=2, pad=nDigits)
+function getDigits(line::String)
+    [parse(Int, c) for c in line]
+end
+
+function getUpdate(line::String)
+    update = getDigits(line)
     update[update .== 0] .= -1
     return update
 end
 
 function solve(io::IO)
-    # Get the number of digits from the string for future reference,
-    # as it may not be clear from the numbers themselves
-    firstLine = readline(io)
-    nDigits = length(firstLine)
-    seekstart(io)
     # Count the ones in each position across the lines
-    diffs = sum(getUpdate(line, nDigits) for line in eachline(io))
+    diffs = sum(getUpdate(line) for line in eachline(io))
     # Assume no ties!
-    mostCommon = diffs .> 0
+    mostCommon = reverse(diffs .> 0)  # reverse for simpler computation
     epsilon = evalpoly(2, mostCommon)
     gamma = evalpoly(2, .~mostCommon)
     (epsilon, gamma, epsilon * gamma)
