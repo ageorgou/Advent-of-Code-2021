@@ -6,12 +6,6 @@ function getDigits(line::String)
     [parse(Int, c) for c in line]
 end
 
-function getUpdate(line::String)
-    update = getDigits(line)
-    update[update .== 0] .= -1
-    return update
-end
-
 function mostCommon(digits)
     oneCount = sum(digits)
     zeroCount = length(digits) - oneCount
@@ -44,12 +38,11 @@ function asDecimal(digits::BitVector)
 end
 
 function solve(io::IO)
-    # Count the ones in each position across the lines
-    diffs = sum(getUpdate(line) for line in eachline(io))
-    # Assume no ties!
-    mostCommon = diffs .> 0
-    epsilon = asDecimal(mostCommon)
-    gamma = asDecimal(.~mostCommon)
+    allDigits = parseAllDigits(io)
+    mostCommonDigits = BitVector(
+        [mostCommon(column) for column in eachcol(allDigits)])
+    epsilon = asDecimal(mostCommonDigits)
+    gamma = asDecimal(.~mostCommonDigits)
     (epsilon, gamma, epsilon * gamma)
 end
 
