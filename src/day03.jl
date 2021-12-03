@@ -13,11 +13,9 @@ function solve(io::IO)
     # as it may not be clear from the numbers themselves
     firstLine = readline(io)
     nDigits = length(firstLine)
-    diffs = getUpdate(firstLine, nDigits)
+    seekstart(io)
     # Count the ones in each position across the lines
-    for line in eachline(io)
-        diffs += getUpdate(line, nDigits)
-    end
+    diffs = sum(getUpdate(line, nDigits) for line in eachline(io))
     # Assume no ties!
     mostCommon = diffs .> 0
     epsilon = evalpoly(2, mostCommon)
