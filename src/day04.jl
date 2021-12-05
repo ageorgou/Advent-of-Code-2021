@@ -71,7 +71,23 @@ function solve(io::IO)
             return [score(table, n) for table in tables if table.hasWon]
         end
     end
-    error("Noone won")
+    error("No one won")
+end
+
+function solvePart2(io::IO)
+    numbers, tables = readInput(io)
+    for n in numbers
+        if checkMatches(tables, n)
+            winners = [table.hasWon for table in tables]
+            if sum(winners) == length(tables)
+                # done, return all scores (probably only 1!)
+                return [score(table, n) for table in tables]
+            else
+                deleteat!(tables, winners)
+            end
+        end
+    end
+    error("Some tables did not win at the end of all the numbers")
 end
 
 const TEST_INPUT = """
@@ -117,6 +133,7 @@ NOT_READY = BingoTable([
     @test length(readInput(IOBuffer(TEST_INPUT))[1]) == 27
     @test length(readInput(IOBuffer(TEST_INPUT))[2]) == 3
     @test solve(IOBuffer(TEST_INPUT)) == [4512]
+    @test solvePart2(IOBuffer(TEST_INPUT)) == [1924]
 end
 
 @testset "calling bingo" begin
