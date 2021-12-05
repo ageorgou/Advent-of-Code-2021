@@ -2,10 +2,11 @@ module day04
 
 using ..ReTest
 
-struct BingoTable
+mutable struct BingoTable
     numbers::Matrix{Int}
     matching::BitMatrix
-    BingoTable(t) = size(t) == (5, 5) ? new(t, falses(5, 5)) : error("Bad dimensions")
+    hasWon::Bool
+    BingoTable(t) = size(t) == (5, 5) ? new(t, falses(5, 5), false) : error("Bad dimensions")
 end
 
 function readInput(io::IO)
@@ -23,13 +24,11 @@ function readInput(io::IO)
 end
 
 function checkMatches(collection::Vector{BingoTable}, n)
-    winners = Vector{Int}()
-    for (i, table) in enumerate(collection)
-        if checkMatches(table, n)
-            push!(winners, i)
-        end
+    anyWon = false
+    for table in collection
+        anyWon |= checkMatches(table, n)
     end
-    return winners
+    return anyWon
 end
 
 function checkMatches(table::BingoTable, n)
@@ -37,7 +36,10 @@ function checkMatches(table::BingoTable, n)
     if !isempty(matches)
         table.matching[matches] .= true
         # check if won
-        return isWinning(table.matching)
+        if !table.hasWon && isWinning(table.matching)
+            callBingo!(table)
+            return true
+        end
     end
     return false
 end
@@ -46,6 +48,17 @@ function isWinning(matches::BitMatrix)
     any(all(matches, dims=1)) || any(all(matches, dims=2))
 end
 
+function callBingo!(table::BingoTable)
+    if table.hasWon
+        error("Already called!")
+    elseif !isWinning(table.matching)
+        error("You shouldn't have called!")
+    else
+        table.hasWon = true
+    end
+end
+
+
 function score(table::BingoTable, winningNumber::Int)
     sum(table.numbers[.! table.matching]) * winningNumber
 end
@@ -53,10 +66,9 @@ end
 function solve(io::IO)
     numbers, tables = readInput(io)
     for n in numbers
-        winners = checkMatches(tables, n)
-        if !isempty(winners)
+        if checkMatches(tables, n)
             # assuming many can win concurrently
-            return [score(tables[i], n) for i in winners]
+            return [score(table, n) for table in tables if table.hasWon]
         end
     end
     error("Noone won")
@@ -84,10 +96,32 @@ const TEST_INPUT = """
  2  0 12  3  7
 """
 
+READY_TO_WIN = BingoTable([
+    14 21 17 24  4
+    10 16 15  9 19
+    18  8 23 26 20
+    22 11 13  6  5
+     2  0 12  3  7
+])
+READY_TO_WIN.matching[1, :] .= true
+
+NOT_READY = BingoTable([
+    14 21 17 24  4
+    10 16 15  9 19
+    18  8 23 26 20
+    22 11 13  6  5
+     2  0 12  3  7
+])
+
 @testset "input" begin
     @test length(readInput(IOBuffer(TEST_INPUT))[1]) == 27
     @test length(readInput(IOBuffer(TEST_INPUT))[2]) == 3
     @test solve(IOBuffer(TEST_INPUT)) == [4512]
+end
+
+@testset "calling bingo" begin
+    @test isWinning(READY_TO_WIN.matching)
+    @test_throws ErrorException callBingo!(BingoTable(READY_TO_WIN.numbers))
 end
 
 end
