@@ -2,18 +2,64 @@ module day04
 
 using ..ReTest
 
+struct BingoTable
+    numbers::Matrix{Int}
+    matching::BitMatrix
+    BingoTable(t) = size(t) == (5, 5) ? new(t, falses(5, 5)) : error("Bad dimensions")
+end
+
 function readInput(io::IO)
     numbers = [parse(Int, n) for n in split(readline(io), ',')]
-    tables = Vector{Matrix{Int}}()
+    tables = Vector{BingoTable}()
     while !eof(io)
         readline(io) # assume empty line between each sections
-        table = zeros(5, 5)
+        table = zeros(Int, 5, 5)
         for i = 1:5
             table[i,:] = [parse(Int, n) for n in split(readline(io))]
         end
-        push!(tables, table)
+        push!(tables, BingoTable(table))
     end
     return (numbers, tables)
+end
+
+function checkMatches(collection::Vector{BingoTable}, n)
+    winners = Vector{Int}()
+    for (i, table) in enumerate(collection)
+        if checkMatches(table, n)
+            push!(winners, i)
+        end
+    end
+    return winners
+end
+
+function checkMatches(table::BingoTable, n)
+    matches = findall(table.numbers .== n)
+    if !isempty(matches)
+        table.matching[matches] .= true
+        # check if won
+        return isWinning(table.matching)
+    end
+    return false
+end
+
+function isWinning(matches::BitMatrix)
+    any(all(matches, dims=1)) || any(all(matches, dims=2))
+end
+
+function score(table::BingoTable, winningNumber::Int)
+    sum(table.numbers[.! table.matching]) * winningNumber
+end
+
+function solve(io::IO)
+    numbers, tables = readInput(io)
+    for n in numbers
+        winners = checkMatches(tables, n)
+        if !isempty(winners)
+            # assuming many can win concurrently
+            return [score(tables[i], n) for i in winners]
+        end
+    end
+    error("Noone won")
 end
 
 const TEST_INPUT = """
@@ -41,6 +87,7 @@ const TEST_INPUT = """
 @testset "input" begin
     @test length(readInput(IOBuffer(TEST_INPUT))[1]) == 27
     @test length(readInput(IOBuffer(TEST_INPUT))[2]) == 3
+    @test solve(IOBuffer(TEST_INPUT)) == [4512]
 end
 
 end
