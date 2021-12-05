@@ -30,7 +30,13 @@ function getAllPoints(s::Segment)
         limits = s.start[2], s.stop[2]
         return [(s.start[1], y) for y in range(minimum(limits), stop=maximum(limits))]
     else
-        error("Can only handle horizontal or vertical segments: $((s.start, s.stop))")
+        # assume 45 degrees!
+        stepX = sign(s.stop[1] - s.start[1])
+        stepY = sign(s.stop[2] - s.start[2])
+        return [
+            (x, y)
+            for (x, y) in zip(s.start[1]:stepX:s.stop[1], s.start[2]:stepY:s.stop[2])
+        ]
     end
 end
 
@@ -43,7 +49,7 @@ function solve(io::IO)
     # add points to visited list
     # if already in visited, add to "at least 2" list
     for segment in segments
-        (isHorizontal(segment) || isVertical(segment)) || continue 
+        # (isHorizontal(segment) || isVertical(segment)) || continue 
         newPoints = getAllPoints(segment)
         alreadySeen = findall(p -> p in visited, newPoints)
         union!(visitedTwice, newPoints[alreadySeen])
@@ -76,6 +82,8 @@ end
     @test isVertical(Segment("1,1 -> 1,3"))
     @test isHorizontal(Segment("9,7 -> 7, 7"))
     @test !isHorizontal(Segment((6, 4), (2, 0))) && !isVertical(Segment((6, 4), (2, 0)))
+    @test getAllPoints(Segment("1,1 -> 3,3")) == [(1,1), (2,2), (3,3)]
+    @test getAllPoints(Segment("9,7 -> 7,9")) == [(9,7), (8,8), (7,9)]
 end
 
 @testset "overall" begin
