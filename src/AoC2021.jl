@@ -2,9 +2,8 @@ module AoC2021
 
 using ReTest
 
-include("day01.jl")
-include("day02.jl")
-include("day03.jl")
-include("day04.jl")
+for day in range(1, length=5)
+    include("day$(string(day, pad=2)).jl")
+end
 
 end # module
